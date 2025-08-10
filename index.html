@@ -3,34 +3,70 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Verdes Campos - Teste de Áudio</title>
+<title>Verdes Campos - Rádio Ao Vivo</title>
 <style>
-  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0f0e;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-  .card{width:min(92vw,560px);background:#121715;border:1px solid #222a25;border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.35);padding:24px}
-  h1{margin:0 0 12px;font-size:20px}
-  p{margin:0 0 12px;color:#a7b0aa}
-  audio{width:100%;outline:none}
+  :root{
+    --primary:#1db954; /* ajuste para o verde oficial depois, se quiser */
+    --bg:#0b0f0e;
+    --text:#ffffff;
+    --muted:#a7b0aa;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{width:100%;max-width:420px;background:#121715;border:1px solid #222a25;border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.35);padding:20px}
+  h1{font-size:20px;margin:0 0 12px;font-weight:700;letter-spacing:.5px}
+  p.sub{margin:0 0 20px;color:var(--muted);font-size:14px}
+  .btn{width:100%;padding:14px 16px;border:none;border-radius:12px;background:var(--primary);color:#000;font-weight:800;font-size:16px;cursor:pointer}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:12px;align-items:center;margin-top:14px}
+  .range{flex:1}
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#0f1311;color:var(--muted);font-size:12px;border:1px solid #202823}
+  .footer{margin-top:18px;text-align:center;font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
+<div class="wrap">
   <div class="card">
-    <h1>Verdes Campos • Ao Vivo (teste)</h1>
-    <p>Use os controles nativos do navegador</p>
-
-    <audio
-      id="player"
-      controls
-      preload="none"
-      crossorigin="anonymous"
-    >
-      <source src="https://radioverdescampos-stream.euabima.workers.dev/" type="audio/mpeg">
-      Seu navegador não suporta áudio HTML5.
-    </audio>
-
-    <p style="margin-top:12px;font-size:12px;color:#a7b0aa">
-      Se não tocar, atualize a página e tente novamente. Em iOS sempre é preciso um toque manual.
-    </p>
+    <h1>Verdes Campos • Ao Vivo</h1>
+    <p class="sub">Toque para ouvir a transmissão</p>
+    <button id="playBtn" class="btn">▶️ Tocar</button>
+    <div class="row">
+      <span class="badge" id="status">parado</span>
+      <input id="vol" class="range" type="range" min="0" max="1" step="0.01" value="1"/>
+    </div>
+    <div class="footer">Se o áudio não iniciar, toque no botão acima.</div>
   </div>
+</div>
+
+<audio id="player" preload="none" src="https://radioverdescampos-stream.euabima.workers.dev/"></audio>
+<script>
+  const audio = document.getElementById('player');
+  const btn   = document.getElementById('playBtn');
+  const vol   = document.getElementById('vol');
+  const status= document.getElementById('status');
+
+  function setStatus(s){ status.textContent=s; }
+  function updateBtn(){ btn.textContent = audio.paused ? '▶️ Tocar' : '⏸️ Pausar'; }
+
+  btn.addEventListener('click', async ()=>{
+    try{
+      if(audio.paused){ await audio.play(); setStatus('ao vivo'); }
+      else{ audio.pause(); setStatus('pausado'); }
+      updateBtn();
+    }catch(e){
+      setStatus('erro: ' + e.message);
+    }
+  });
+
+  vol.addEventListener('input', ()=> audio.volume = vol.value);
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden && audio.paused){
+      audio.play().then(()=>{ setStatus('ao vivo'); updateBtn(); }).catch(()=>{});
+    }
+  });
+
+  setStatus('parado'); updateBtn();
+</script>
 </body>
 </html>
-
